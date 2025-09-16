@@ -1,0 +1,22 @@
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python generated fils
+__pycache__/
+*.pyc
+*.py0 
+*.pyd 
+
+# Virtual environments
+venv/
+env/
+.env
+
+# IDE/Editor folders
+.vscode/
+.idea/
+
+# Large data files
+*.csv 
+*.npy 
+*.hdf5
