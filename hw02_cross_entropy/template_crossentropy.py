@@ -2,8 +2,9 @@
 
 import numpy as np
 
-n_states = 500 # for Taxi-v3
-n_actions = 6 # for Taxi-v3
+n_states = 500  # for Taxi-v3
+n_actions = 6  # for Taxi-v3
+
 
 def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
     """
@@ -22,11 +23,21 @@ def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
     (they will become different later).
     """
     # your code here
-    elite_states, elite_actions = None, None
-    assert elite_states is not None and elite_actions is not None
-    # your code here
+    reward_threshold = np.percentile(rewards_batch, percentile)
 
+    elite_states, elite_actions = None, None
+
+    # your code here
+    elite_states = []
+    elite_actions = []
+
+    for i in range(len(rewards_batch)):
+        if rewards_batch[i] >= reward_threshold:
+            elite_states.extend(states_batch[i])
+            elite_actions.extend(actions_batch[i])
+    assert elite_states is not None and elite_actions is not None
     return elite_states, elite_actions
+
 
 def update_policy(elite_states, elite_actions, n_states=n_states, n_actions=n_actions):
     """
@@ -46,11 +57,25 @@ def update_policy(elite_states, elite_actions, n_states=n_states, n_actions=n_ac
     :returns: new_policy: np.array of shape (n_states, n_actions)
     """
     # your code here
-    new_policy = None
+    new_policy = np.zeros((n_states, n_actions))
+
+    for state, action in zip(elite_states, elite_actions):
+        new_policy[state, action] += 1
+
+    for state in range(n_states):
+        total_count = new_policy[state].sum()
+
+        if total_count > 0:
+            # This state was visited - normalize to get probabilities
+            new_policy[state] = new_policy[state] / total_count
+        else:
+            # This state was never visited - use uniform distribution
+            new_policy[state] = np.ones(n_actions) / n_actions
     assert new_policy is not None
     # your code here
 
     return new_policy
+
 
 def generate_session(env, policy, t_max=int(10**4)):
     """
@@ -61,23 +86,24 @@ def generate_session(env, policy, t_max=int(10**4)):
     :returns: list of states, list of actions and sum of rewards
     """
     states, actions = [], []
-    total_reward = 0.
-
+    total_reward = 0.0
     s, info = env.reset()
 
     for t in range(t_max):
-        # your code here - sample action from policy and get new state, reward, done flag etc. from the environment
-        new_s, r, done = None, None, None
-        a = None
+        # FIXED: Use policy.shape[1] instead of n_actions
+        a = np.random.choice(policy.shape[1], p=policy[s])
+
+        new_s, r, done, truncated, info = env.step(a)
         assert new_s is not None and r is not None and done is not None
         assert a is not None
-        # your code here
-        # Record state, action and add up reward to states,actions and total_reward accordingly.
+
         states.append(s)
         actions.append(a)
         total_reward += r
-
         s = new_s
+
         if done:
             break
+
     return states, actions, total_reward
+
